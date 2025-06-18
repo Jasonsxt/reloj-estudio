@@ -7,32 +7,42 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" />
   <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #333;
+      --panel-bg: #ffffff;
+    }
+
+    body.dark-mode {
+      --bg-color: #1e1e1e;
+      --text-color: #f5f5f5;
+      --panel-bg: #2c2c2c;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
       margin-top: 50px;
-      background: linear-gradient(to right, #dfe9f3, #ffffff);
-      color: #333;
+      background: var(--bg-color);
+      color: var(--text-color);
     }
+
     h1 {
       margin-bottom: 10px;
     }
-    .clock,
-    .timer,
-    .breathing,
-    .temporizador {
+    .clock, .timer, .breathing, .temporizador {
       margin: 20px auto;
       padding: 20px;
       border-radius: 15px;
-      background: #ffffff;
+      background: var(--panel-bg);
       width: 320px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     }
     .display {
       font-size: 2em;
       margin: 15px 0;
       font-weight: bold;
-      color: #2c3e50;
+      color: var(--text-color);
     }
     button {
       padding: 10px 20px;
@@ -47,155 +57,170 @@
     button:hover {
       background-color: #2980b9;
     }
+    select {
+      padding: 5px;
+      margin: 5px;
+    }
   </style>
 </head>
 <body>
-  <h1>Reloj y Cronómetro de Estudio</h1>
+<h1>Reloj y Cronómetro de Estudio</h1>
 
-  <div class="clock">
-    <h2>Reloj Actual</h2>
-    <div id="reloj" class="display"></div>
-  </div>
+<button onclick="toggleModoOscuro()">Cambiar Modo Claro/Oscuro</button>
 
-  <div class="timer">
-    <h2>Cronómetro</h2>
-    <div id="cronometro" class="display">00:00:00</div>
-    <button onclick="iniciarCrono()">Iniciar</button>
-    <button onclick="pausarCrono()">Pausar</button>
-    <button onclick="reiniciarCrono()">Reiniciar</button>
-  </div>
+<div class="clock">
+  <h2>Reloj Actual</h2>
+  <div id="reloj" class="display"></div>
+</div>
 
-  <div class="temporizador">
-    <h2>Temporizador por Bloque de Estudio (25 min)</h2>
-    <div id="temporizador" class="display">25:00</div>
-    <button onclick="iniciarTemporizador()">Iniciar</button>
-    <button onclick="pausarTemporizador()">Pausar</button>
-    <button onclick="reiniciarTemporizador()">Reiniciar</button>
-  </div>
+<div class="timer">
+  <h2>Cronómetro</h2>
+  <div id="cronometro" class="display">00:00:00</div>
+  <button onclick="iniciarCrono()">Iniciar</button>
+  <button onclick="pausarCrono()">Pausar</button>
+  <button onclick="reiniciarCrono()">Reiniciar</button>
+</div>
 
-  <div class="breathing">
-    <h2>Técnica 4-7-8</h2>
-    <button onclick="ejecutarRespiracion()">Iniciar Respiración 4-7-8</button>
-    <div id="instruccion" class="display"></div>
-  </div>
+<div class="temporizador">
+  <h2>Temporizador por Bloque de Estudio (25 min)</h2>
+  <div>Bloque actual: <span id="bloque">1</span></div>
+  <div id="temporizador" class="display">25:00</div>
+  <label for="sonido">Sonido de alarma:</label>
+  <select id="sonido">
+    <option value="https://www.soundjay.com/buttons/sounds/beep-07.mp3">Beep</option>
+    <option value="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">Campana</option>
+    <option value="https://www.soundjay.com/button/beep-08b.mp3">Beep corto</option>
+  </select><br>
+  <button onclick="iniciarTemporizador()">Iniciar</button>
+  <button onclick="pausarTemporizador()">Pausar</button>
+  <button onclick="reiniciarTemporizador()">Reiniciar</button>
+</div>
 
-  <script>
-    function actualizarReloj() {
-      const ahora = new Date();
-      let horas = ahora.getHours();
-      const minutos = ahora.getMinutes().toString().padStart(2, '0');
-      const segundos = ahora.getSeconds().toString().padStart(2, '0');
-      const ampm = horas >= 12 ? 'PM' : 'AM';
-      horas = horas % 12 || 12;
-      document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos} ${ampm}`;
-    }
-    setInterval(actualizarReloj, 1000);
-    actualizarReloj();
+<div class="breathing">
+  <h2>Técnica 4-7-8</h2>
+  <button onclick="ejecutarRespiracion()">Iniciar Respiración 4-7-8</button>
+  <div id="instruccion" class="display"></div>
+</div>
 
-    let segundos = 0,
-      minutos = 0,
-      horas = 0,
-      cronoActivo = false,
-      intervalo;
-    function actualizarCronometro() {
-      segundos++;
-      if (segundos === 60) {
-        segundos = 0;
-        minutos++;
+<audio id="alarma"></audio>
+
+<script>
+// Modo oscuro toggle
+function toggleModoOscuro() {
+  document.body.classList.toggle('dark-mode');
+}
+
+// Reloj en formato 12 horas
+function actualizarReloj() {
+  const reloj = document.getElementById('reloj');
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // el 0 debe ser 12
+
+  reloj.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+// Cronómetro
+let cronoInterval = null;
+let cronoSegundos = 0;
+function iniciarCrono() {
+  if(cronoInterval) return;
+  cronoInterval = setInterval(() => {
+    cronoSegundos++;
+    const hrs = Math.floor(cronoSegundos / 3600);
+    const min = Math.floor((cronoSegundos % 3600) / 60);
+    const seg = cronoSegundos % 60;
+    document.getElementById('cronometro').textContent = `${hrs.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}:${seg.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+function pausarCrono() {
+  clearInterval(cronoInterval);
+  cronoInterval = null;
+}
+function reiniciarCrono() {
+  pausarCrono();
+  cronoSegundos = 0;
+  document.getElementById('cronometro').textContent = '00:00:00';
+}
+
+// Temporizador para bloques de estudio (25 min por defecto)
+let tempInterval = null;
+let tempSegundos = 25 * 60;
+let bloqueActual = 1;
+
+function actualizarTemporizador() {
+  const minutos = Math.floor(tempSegundos / 60);
+  const segundos = tempSegundos % 60;
+  document.getElementById('temporizador').textContent = `${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
+  document.getElementById('bloque').textContent = bloqueActual;
+  if(tempSegundos <= 0) {
+    clearInterval(tempInterval);
+    tempInterval = null;
+    reproducirAlarma();
+    alert(`¡Tiempo del bloque ${bloqueActual} terminado!`);
+  } else {
+    tempSegundos--;
+  }
+}
+
+function iniciarTemporizador() {
+  if(tempInterval) return;
+  tempInterval = setInterval(actualizarTemporizador, 1000);
+}
+function pausarTemporizador() {
+  clearInterval(tempInterval);
+  tempInterval = null;
+}
+function reiniciarTemporizador() {
+  pausarTemporizador();
+  tempSegundos = 25 * 60;
+  document.getElementById('temporizador').textContent = '25:00';
+}
+
+function reproducirAlarma() {
+  const sonidoSeleccionado = document.getElementById('sonido').value;
+  const alarma = document.getElementById('alarma');
+  alarma.src = sonidoSeleccionado;
+  alarma.play();
+}
+
+// Técnica respiración 4-7-8
+const fases = [
+  {accion: 'Inhala', segundos: 4},
+  {accion: 'Mantén', segundos: 7},
+  {accion: 'Exhala', segundos: 8}
+];
+let faseIndex = 0;
+let tiempoFase = fases[0].segundos;
+let respInterval = null;
+
+function ejecutarRespiracion() {
+  if(respInterval) return;
+  faseIndex = 0;
+  tiempoFase = fases[0].segundos;
+  document.getElementById('instruccion').textContent = `${fases[0].accion} - ${tiempoFase} segundos restantes`;
+  respInterval = setInterval(() => {
+    tiempoFase--;
+    if(tiempoFase <= 0) {
+      faseIndex++;
+      if(faseIndex >= fases.length) {
+        clearInterval(respInterval);
+        respInterval = null;
+        document.getElementById('instruccion').textContent = 'Técnica terminada';
+        return;
       }
-      if (minutos === 60) {
-        minutos = 0;
-        horas++;
-      }
-      document.getElementById(
-        'cronometro'
-      ).textContent = `${horas.toString().padStart(2, '0')}:${minutos
-        .toString()
-        .padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+      tiempoFase = fases[faseIndex].segundos;
     }
-    function iniciarCrono() {
-      if (!cronoActivo) {
-        cronoActivo = true;
-        intervalo = setInterval(actualizarCronometro, 1000);
-      }
-    }
-    function pausarCrono() {
-      cronoActivo = false;
-      clearInterval(intervalo);
-    }
-    function reiniciarCrono() {
-      pausarCrono();
-      segundos = minutos = horas = 0;
-      document.getElementById('cronometro').textContent = '00:00:00';
-    }
+    document.getElementById('instruccion').textContent = `${fases[faseIndex].accion} - ${tiempoFase} segundos restantes`;
+  }, 1000);
+}
+</script>
 
-    let temporizadorIntervalo,
-      tiempoRestante = 25 * 60,
-      temporizadorActivo = false;
-    function actualizarTemporizador() {
-      const minutos = Math.floor(tiempoRestante / 60);
-      const segundos = tiempoRestante % 60;
-      document.getElementById(
-        'temporizador'
-      ).textContent = `${minutos.toString().padStart(2, '0')}:${segundos
-        .toString()
-        .padStart(2, '0')}`;
-      if (tiempoRestante > 0) {
-        tiempoRestante--;
-      } else {
-        clearInterval(temporizadorIntervalo);
-        temporizadorActivo = false;
-        alert('¡Tiempo terminado!');
-      }
-    }
-    function iniciarTemporizador() {
-      if (!temporizadorActivo) {
-        temporizadorActivo = true;
-        temporizadorIntervalo = setInterval(actualizarTemporizador, 1000);
-      }
-    }
-    function pausarTemporizador() {
-      clearInterval(temporizadorIntervalo);
-      temporizadorActivo = false;
-    }
-    function reiniciarTemporizador() {
-      pausarTemporizador();
-      tiempoRestante = 25 * 60;
-      actualizarTemporizador();
-    }
-    actualizarTemporizador();
-
-    function ejecutarRespiracion() {
-      const instr = document.getElementById('instruccion');
-      let tiempo = 4;
-      instr.textContent = `Inhala (${tiempo}s)`;
-      let fase = setInterval(() => {
-        tiempo--;
-        if (tiempo > 0) instr.textContent = `Inhala (${tiempo}s)`;
-        else {
-          clearInterval(fase);
-          tiempo = 7;
-          instr.textContent = `Retén (${tiempo}s)`;
-          fase = setInterval(() => {
-            tiempo--;
-            if (tiempo > 0) instr.textContent = `Retén (${tiempo}s)`;
-            else {
-              clearInterval(fase);
-              tiempo = 8;
-              instr.textContent = `Exhala (${tiempo}s)`;
-              fase = setInterval(() => {
-                tiempo--;
-                if (tiempo > 0) instr.textContent = `Exhala (${tiempo}s)`;
-                else {
-                  clearInterval(fase);
-                  instr.textContent = 'Listo. Respira normal.';
-                }
-              }, 1000);
-            }
-          }, 1000);
-        }
-      }, 1000);
-    }
-  </script>
 </body>
 </html>
