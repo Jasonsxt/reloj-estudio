@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reloj y Cronómetro de Estudio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background: linear-gradient(to right, #dfe9f3, #ffffff);
+      color: #333;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .clock,
+    .timer,
+    .breathing,
+    .temporizador {
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 15px;
+      background: #ffffff;
+      width: 320px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .display {
+      font-size: 2em;
+      margin: 15px 0;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reloj y Cronómetro de Estudio</h1>
+
+  <div class="clock">
+    <h2>Reloj Actual</h2>
+    <div id="reloj" class="display"></div>
+  </div>
+
+  <div class="timer">
+    <h2>Cronómetro</h2>
+    <div id="cronometro" class="display">00:00:00</div>
+    <button onclick="iniciarCrono()">Iniciar</button>
+    <button onclick="pausarCrono()">Pausar</button>
+    <button onclick="reiniciarCrono()">Reiniciar</button>
+  </div>
+
+  <div class="temporizador">
+    <h2>Temporizador por Bloque de Estudio (25 min)</h2>
+    <div id="temporizador" class="display">25:00</div>
+    <button onclick="iniciarTemporizador()">Iniciar</button>
+    <button onclick="pausarTemporizador()">Pausar</button>
+    <button onclick="reiniciarTemporizador()">Reiniciar</button>
+  </div>
+
+  <div class="breathing">
+    <h2>Técnica 4-7-8</h2>
+    <button onclick="ejecutarRespiracion()">Iniciar Respiración 4-7-8</button>
+    <div id="instruccion" class="display"></div>
+  </div>
+
+  <script>
+    function actualizarReloj() {
+      const ahora = new Date();
+      let horas = ahora.getHours();
+      const minutos = ahora.getMinutes().toString().padStart(2, '0');
+      const segundos = ahora.getSeconds().toString().padStart(2, '0');
+      const ampm = horas >= 12 ? 'PM' : 'AM';
+      horas = horas % 12 || 12;
+      document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos} ${ampm}`;
+    }
+    setInterval(actualizarReloj, 1000);
+    actualizarReloj();
+
+    let segundos = 0,
+      minutos = 0,
+      horas = 0,
+      cronoActivo = false,
+      intervalo;
+    function actualizarCronometro() {
+      segundos++;
+      if (segundos === 60) {
+        segundos = 0;
+        minutos++;
+      }
+      if (minutos === 60) {
+        minutos = 0;
+        horas++;
+      }
+      document.getElementById(
+        'cronometro'
+      ).textContent = `${horas.toString().padStart(2, '0')}:${minutos
+        .toString()
+        .padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+    }
+    function iniciarCrono() {
+      if (!cronoActivo) {
+        cronoActivo = true;
+        intervalo = setInterval(actualizarCronometro, 1000);
+      }
+    }
+    function pausarCrono() {
+      cronoActivo = false;
+      clearInterval(intervalo);
+    }
+    function reiniciarCrono() {
+      pausarCrono();
+      segundos = minutos = horas = 0;
+      document.getElementById('cronometro').textContent = '00:00:00';
+    }
+
+    let temporizadorIntervalo,
+      tiempoRestante = 25 * 60,
+      temporizadorActivo = false;
+    function actualizarTemporizador() {
+      const minutos = Math.floor(tiempoRestante / 60);
+      const segundos = tiempoRestante % 60;
+      document.getElementById(
+        'temporizador'
+      ).textContent = `${minutos.toString().padStart(2, '0')}:${segundos
+        .toString()
+        .padStart(2, '0')}`;
+      if (tiempoRestante > 0) {
+        tiempoRestante--;
+      } else {
+        clearInterval(temporizadorIntervalo);
+        temporizadorActivo = false;
+        alert('¡Tiempo terminado!');
+      }
+    }
+    function iniciarTemporizador() {
+      if (!temporizadorActivo) {
+        temporizadorActivo = true;
+        temporizadorIntervalo = setInterval(actualizarTemporizador, 1000);
+      }
+    }
+    function pausarTemporizador() {
+      clearInterval(temporizadorIntervalo);
+      temporizadorActivo = false;
+    }
+    function reiniciarTemporizador() {
+      pausarTemporizador();
+      tiempoRestante = 25 * 60;
+      actualizarTemporizador();
+    }
+    actualizarTemporizador();
+
+    function ejecutarRespiracion() {
+      const instr = document.getElementById('instruccion');
+      let tiempo = 4;
+      instr.textContent = `Inhala (${tiempo}s)`;
+      let fase = setInterval(() => {
+        tiempo--;
+        if (tiempo > 0) instr.textContent = `Inhala (${tiempo}s)`;
+        else {
+          clearInterval(fase);
+          tiempo = 7;
+          instr.textContent = `Retén (${tiempo}s)`;
+          fase = setInterval(() => {
+            tiempo--;
+            if (tiempo > 0) instr.textContent = `Retén (${tiempo}s)`;
+            else {
+              clearInterval(fase);
+              tiempo = 8;
+              instr.textContent = `Exhala (${tiempo}s)`;
+              fase = setInterval(() => {
+                tiempo--;
+                if (tiempo > 0) instr.textContent = `Exhala (${tiempo}s)`;
+                else {
+                  clearInterval(fase);
+                  instr.textContent = 'Listo. Respira normal.';
+                }
+              }, 1000);
+            }
+          }, 1000);
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
